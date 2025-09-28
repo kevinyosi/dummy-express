@@ -5,8 +5,10 @@ import compression from "compression";
 import pino from "pino";
 import pinoHttp from "pino-http";
 import rateLimit from "express-rate-limit";
-import health from "./routes/health";
-import { notFound, errorHandler } from "./middlewares/error";
+import health from "./routes/health.js";
+
+import swaggerUi from "swagger-ui-express";
+import { swaggerSpec } from "./docs/swagger.js";
 
 const app = express();
 const logger = pino({ level: process.env.LOG_LEVEL || "info" });
@@ -20,18 +22,19 @@ app.use(express.urlencoded({ extended: false }));
 
 app.use(
   rateLimit({
-    windowMs: 60_000, // 1 menit
-    max: 120,         // 120 req/menit/ip
+    windowMs: 60_000,
+    max: 120,
     standardHeaders: true,
     legacyHeaders: false,
+    skip: (req) => req.path.startsWith("/docs"), // jangan rate-limit halaman docs
   })
 );
 
-// routes
-app.use(health);
+// ===== Swagger UI =====
+app.get("/docs.json", (_req, res) => res.json(swaggerSpec));
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// 404 + error handler
-app.use(notFound);
-app.use(errorHandler);
+// ===== Routes =====
+app.use(health);
 
 export default app;
