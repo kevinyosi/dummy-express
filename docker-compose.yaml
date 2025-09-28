@@ -1,0 +1,26 @@
+version: "3.9"
+services:
+  api:
+    image: node:20-alpine
+    working_dir: /app
+    command: sh -c "npm i && npm run dev"
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+  pg:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: fakebank
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: rootpass
+    ports: ["5432:5432"]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  adminer:
+    image: adminer
+    ports: ["8080:8080"]
+volumes: { pgdata: {} }
